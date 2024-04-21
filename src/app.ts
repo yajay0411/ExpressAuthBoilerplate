@@ -1,7 +1,8 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
-import globalErrorHandler from "./middlewares/globalErrorHandler";
+import globalErrorHandler from "./middlewares/GlobalErrorHandler";
 import { configuration } from "./config/Config";
+import userRouter from "./routes/UserRouter";
 
 const app = express();
 
@@ -20,6 +21,8 @@ app.get("/", (req: Request, res: Response) => {
     message: `Welcome to Express Boilerplate apis -- DB :: ${configuration.database_connected_to}`,
   });
 });
+
+app.use("/api/users", userRouter);
 
 // Global error handler
 app.use(globalErrorHandler);

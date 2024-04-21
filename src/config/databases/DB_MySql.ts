@@ -6,7 +6,7 @@ const connectMySqlDB = async () => {
   try {
     const mysqlConnection = mysql.createConnection({
       host: configuration.mysql_db_host,
-      port: configuration.mysql_db_port as any,
+      port: parseInt(configuration.mysql_db_port as string),
       user: configuration.mysql_db_user,
       password: configuration.mysql_db_password,
       database: configuration.mysql_db_name,
