@@ -1,28 +1,26 @@
 //database connection :
-import mysql from "mysql";
 import { configuration } from "../Config";
+import { Sequelize } from "sequelize";
 
-const connectMySqlDB = async () => {
-  try {
-    const mysqlConnection = mysql.createConnection({
-      host: configuration.mysql_db_host,
-      port: parseInt(configuration.mysql_db_port as string),
-      user: configuration.mysql_db_user,
-      password: configuration.mysql_db_password,
-      database: configuration.mysql_db_name,
+const sequelizeMysqlConnect = async () => {
+  const sequelize = new Sequelize(
+    configuration.mysql_db_name as string,
+    configuration.mysql_db_user as string,
+    configuration.mysql_db_password as string,
+    {
+      host: configuration.mysql_db_host as string,
+      dialect: "mysql",
+    }
+  )
+    .authenticate()
+    .then(() => {
+      console.log(
+        `Connected to database successfully :: ${configuration.database_connected_to}`
+      );
+    })
+    .catch((err) => {
+      console.error("Failed to connect to database.", err?.original?.code);
+      process.exit(1);
     });
-
-    mysqlConnection.connect((err) => {
-      if (err) {
-        console.log(`ERROR:${err}`);
-      } else {
-        console.log("Connected to database successfully");
-      }
-    });
-  } catch (err) {
-    console.error("Failed to connect to database.", err);
-    process.exit(1);
-  }
 };
-
-export default connectMySqlDB;
+export default sequelizeMysqlConnect;

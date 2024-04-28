@@ -6,13 +6,12 @@ import userRouter from "./routes/UserRouter";
 
 const app = express();
 
+app.use(express.json());
 app.use(
   cors({
     origin: configuration.frontendDomain,
   })
 );
-
-app.use(express.json());
 
 // Routes
 // Http methods: GET, POST, PUT, PATCH, DELETE

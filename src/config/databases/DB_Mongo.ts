@@ -2,20 +2,17 @@ import mongoose from "mongoose";
 import { configuration } from "../Config";
 
 const connectMongoDB = async () => {
-  try {
-    mongoose.connection.on("connected", () => {
-      console.log("Connected to database successfully");
+  await mongoose
+    .connect(configuration.databaseMongoUrl as string)
+    .then(() => {
+      console.log(
+        `Connected to database successfully :: ${configuration.database_connected_to}`
+      );
+    })
+    .catch((err) => {
+      console.error("Failed to connect to database.", err.errorResponse.errmsg);
+      process.exit(1);
     });
-
-    mongoose.connection.on("error", (err) => {
-      console.log("Error in connecting to database.", err);
-    });
-
-    await mongoose.connect(configuration.databaseMongoUrl as string);
-  } catch (err) {
-    console.error("Failed to connect to database.", err);
-    process.exit(1);
-  }
 };
 
 export default connectMongoDB;
