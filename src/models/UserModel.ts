@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema<User>(
   {
-    name: {
+    first_name: {
+      type: String,
+      required: true,
+    },
+    last_name: {
       type: String,
       required: true,
     },
@@ -23,7 +27,8 @@ export default mongoose.model<User>("User", userSchema);
 
 export interface User {
   _id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
 }

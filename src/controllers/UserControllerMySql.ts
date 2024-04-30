@@ -4,19 +4,26 @@ import bcrypt from "bcrypt";
 import userModel, { UserAttributes } from "../models/UserModelsMySql";
 import { sign } from "jsonwebtoken";
 import { configuration } from "../config/Config";
+import {
+  UserLoginSchema,
+  UserRegisterSchema,
+} from "../validations/UserValidation";
 
 const registerUserMysql = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const { first_name, last_name, email, password } = req.body;
+  const data = req.body;
 
   // Validation
-  if (!last_name || !first_name || !email || !password) {
-    const error = createHttpError(400, "All fields are required");
-    return next(error);
+  const { value, error } = UserRegisterSchema.validate(data);
+  if (error) {
+    const err = createHttpError(error);
+    return next(err);
   }
+
+  const { first_name, last_name, email, password } = value;
 
   // Database call.
   try {
@@ -66,11 +73,16 @@ const loginUserMysql = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { email, password } = req.body;
+  const data = req.body;
 
-  if (!email || !password) {
-    return next(createHttpError(400, "All fields are required"));
+  // Validation
+  const { value, error } = UserLoginSchema.validate(data);
+  if (error) {
+    const err = createHttpError(error);
+    return next(err);
   }
+
+  const { email, password } = value;
 
   // todo: wrap in try catch.
   const user = await userModel.findOne({ where: { email } });
