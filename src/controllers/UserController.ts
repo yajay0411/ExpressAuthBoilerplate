@@ -9,6 +9,7 @@ import {
   UserLoginSchema,
   UserRegisterSchema,
 } from "../validations/UserValidation";
+import BlacklistToken from "../helper/BlackListToken";
 
 const createUser = async (req: Request, res: Response, next: NextFunction) => {
   const data = req.body;
@@ -53,17 +54,44 @@ const createUser = async (req: Request, res: Response, next: NextFunction) => {
   }
 
   try {
-    // Token generation JWT
-    const token = sign(
+    // Create accesstoken
+    const access_token = sign(
       { sub: newUser._id },
-      configuration.jwtSecret as string,
+      configuration.jwt_access_secret as string,
+      {
+        expiresIn: "10s",
+        algorithm: "HS256",
+      }
+    );
+
+    // Create accesstoken
+    const refresh_token = sign(
+      { sub: newUser._id },
+      configuration.jwt_refresh_secret as string,
       {
         expiresIn: "1m",
         algorithm: "HS256",
       }
     );
+
+    //access_token
+    const token_expires = new Date(Date.now() + 10000);
+    res.cookie("access_token", access_token, {
+      httpOnly: true,
+      secure: true, // Set to true if using HTTPS
+      expires: token_expires, // Set the expiration time for the cookie (10 s in this example)
+    });
+
+    //refresh_token
+    const refresh_expires = new Date(Date.now() + 60000);
+    res.cookie("refresh_token", refresh_token, {
+      httpOnly: true,
+      secure: true, // Set to true if using HTTPS
+      expires: refresh_expires, // Set the expiration time for the cookie (1 min in this example)
+    });
+
     // Response
-    res.status(201).json({ accessToken: token });
+    res.status(201).json({ code: 200, message: "Logged In Successful" });
   } catch (err) {
     return next(createHttpError(500, "Error while signing the jwt token"));
   }
@@ -93,14 +121,72 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
     return next(createHttpError(400, "Username or password incorrect!"));
   }
 
-  // todo: handle errors
   // Create accesstoken
-  const token = sign({ sub: user._id }, configuration.jwtSecret as string, {
-    expiresIn: "1m",
-    algorithm: "HS256",
+  const access_token = sign(
+    { sub: user._id },
+    configuration.jwt_access_secret as string,
+    {
+      expiresIn: "10s",
+      algorithm: "HS256",
+    }
+  );
+
+  // Create accesstoken
+  const refresh_token = sign(
+    { sub: user._id },
+    configuration.jwt_refresh_secret as string,
+    {
+      expiresIn: "1m",
+      algorithm: "HS256",
+    }
+  );
+
+  //access_token
+  const token_expires = new Date(Date.now() + 10000);
+  res.cookie("access_token", access_token, {
+    httpOnly: true,
+    secure: true, // Set to true if using HTTPS
+    expires: token_expires, // Set the expiration time for the cookie (10 s in this example)
   });
 
-  res.json({ accessToken: token });
+  //refresh_token
+  const refresh_expires = new Date(Date.now() + 60000);
+  res.cookie("refresh_token", refresh_token, {
+    httpOnly: true,
+    secure: true, // Set to true if using HTTPS
+    expires: refresh_expires, // Set the expiration time for the cookie (1 min in this example)
+  });
+
+  // Response
+  res.status(200).json({ code: 200, message: "Logged In Successful" });
+};
+
+const logoutUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // Clear the access token cookie
+    res.clearCookie("access_token", {
+      httpOnly: true,
+      secure: true, // Set to true if using HTTPS
+    });
+    res.clearCookie("refresh_token", {
+      httpOnly: true,
+      secure: true, // Set to true if using HTTPS
+    });
+  } catch (error) {
+    return next(error);
+  }
+
+  // Blacklist the refresh token
+  const refreshToken = req.cookies.refresh_token;
+  if (refreshToken) {
+    const expirationDate = new Date(Date.now() + 3600000); // Set the expiration date for the blacklist entry (1 hour in this example)
+    try {
+      await BlacklistToken(refreshToken, expirationDate);
+    } catch (error) {
+      return next(error);
+    }
+  }
+  res.status(200).json({ code: 200, message: "Logged Out Successful" });
 };
 
 const getAllUser = async (req: Request, res: Response, next: NextFunction) => {
@@ -111,4 +197,4 @@ const getAllUser = async (req: Request, res: Response, next: NextFunction) => {
   res.json({ users });
 };
 
-export { createUser, loginUser, getAllUser };
+export { createUser, loginUser, logoutUser, getAllUser };

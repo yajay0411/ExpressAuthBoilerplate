@@ -14,9 +14,11 @@ const _config = {
 
   //global project
   env: process.env.NODE_ENV,
-  jwtSecret: process.env.JWT_SECRET,
+  jwt_access_secret: process.env.JWT_SECRET_ACCESS_TOKEN,
+  jwt_refresh_secret: process.env.JWT_SECRET_REFRESH_TOKEN,
   database_connected_to: process.env.DATABASE_CONNECT_TO,
   server_port: process.env.SERVER_PORT,
+  project_name:process.env.PROJECT_NAME,
 
   frontendDomain: process.env.FRONTEND_DOMAIN,
 };
